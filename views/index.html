@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
+  <link rel="stylesheet" href="/styles/login.css">
+
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+  <style>
+    /* Note: Try to remove the following lines to see the effect of CSS positioning */
+
+    /* .affix {
+      top: 0;
+      width: 100%;
+      z-index: 9999 !important;
+    }
+
+    .affix+.container-fluid {
+      padding-top: 70px;
+    } */
+
+    .adjust {
+      padding-top: 70px;
+    }
+
+    /* body { padding-top: 70px; } */
+  </style>
+
+  <script type="text/javascript">
+    // Load the Visualization API and the piechart package.
+    google.charts.load('current', {
+      'packages': ['corechart', 'bar', 'geochart'],
+      'mapsApiKey': 'AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY'
+    });
+
+    // Set a callback to run when the Google Visualization API is loaded.
+    google.charts.setOnLoadCallback(hospitalOwnershipPieChart);
+    google.charts.setOnLoadCallback(hospitalTypePieChart);
+    google.charts.setOnLoadCallback(hostpitalStarRatingColumnChart);
+    google.charts.setOnLoadCallback(function() { setTimeout(statisticsComplicationAndDeathsGeoChart, 5000); });
+    google.charts.setOnLoadCallback(statisticsReturnsVsDeathsScatterChart);
+    google.charts.setOnLoadCallback(statisticsCasesPieChart);
+
+
+    function hospitalOwnershipPieChart() {
+      var jsonData = $.ajax({
+        url: "/hospital/ownership",
+        dataType: "json",
+        async: false
+      }).responseText;
+
+      var json = JSON.parse(jsonData);
+
+      // Create our data table out of JSON data loaded from server.
+      var data = new google.visualization.DataTable();
+      data.addColumn('string', 'lab');
+      data.addColumn('number', 'count');
+
+      for (var i = 0; i < json.length; i++) {
+        row = json[i];
+        data.addRow([row["lab"], row["count"]]);
+      }
+
+      // Instantiate and draw our chart, passing in some options.
+      var chart = new google.visualization.PieChart(document.getElementById('hospitalOwnershipPieChart'));
+      chart.draw(data, {
+        // title: 'Hospital Ownership',
+        is3D: true
+      });
+    }
+
+    function hospitalTypePieChart() {
+      var jsonData = $.ajax({
+        url: "/hospital/type",
+        dataType: "json",
+        async: false
+      }).responseText;
+
+      var json = JSON.parse(jsonData);
+
+      // Create our data table out of JSON data loaded from server.
+      var data = new google.visualization.DataTable();
+      data.addColumn('string', 'Type');
+      data.addColumn('number', 'Count');
+
+      for (var i = 0; i < json.length; i++) {
+        row = json[i];
+        data.addRow([row["type"], row["count"]]);
+      }
+
+      // Instantiate and draw our chart, passing in some options.
+      var chart = new google.visualization.PieChart(document.getElementById('hospitalTypePieChart'));
+      chart.draw(data, {
+        // title: 'Hospital Type',
+        is3D: true
+      });
+    }
+
+    function hostpitalStarRatingColumnChart() {
+      var jsonData = $.ajax({
+        url: "/hospital/starrating",
+        dataType: "json",
+        async: false
+      }).responseText;
+
+      var json = JSON.parse(jsonData);
+
+      var data = new google.visualization.DataTable();
+      data.addColumn('string', 'State');
+      data.addColumn('number', 'StarRating');
+
+      for (var i = 0; i < json.length; i++) {
+        row = json[i];
+        data.addRow([row["state"], row["starrating"]]);
+      }
+
+      var options = {
+        chart: {
+          title: 'Avg Star Rating - East Coast States',
+          // subtitle: 'Skin, Eye, Nervous, Repiratory',
+        },
+        colors: ['purple', 'green'],
+        // backgroundColor: {fill: "#21f552"},
+        bar: {
+          groupWidth: "30%"
+        },
+      };
+
+      var chart = new google.charts.Bar(document.getElementById('hostpitalStarRatingColumnChart'));
+
+      chart.draw(data, google.charts.Bar.convertOptions(options));
+    }
+
+    function statisticsComplicationAndDeathsGeoChart() {
+      var jsonData = $.ajax({
+        url: "/statistics/complications_and_deaths",
+        dataType: "json",
+        async: false
+      }).responseText;
+
+      var json = JSON.parse(jsonData);
+
+      var data = new google.visualization.DataTable();
+      data.addColumn('string', 'State');
+      data.addColumn('number', 'number_of_deaths');
+
+      for (var i = 0; i < json.length; i++) {
+        row = json[i];
+        data.addRow([row["state"], row["number_of_deaths"]]);
+      }
+
+      var options = {
+        region: 'US',
+        backgroundColor: '#fff',
+        // datalessRegionColor: '#f8bbd0',
+        defaultColor: '#f5f5f5',
+        resolution: 'provinces',
+        // displayMode: 'markers',
+        colorAxis: {
+          colors: ['#e5711c', '#4374e0', '#fc4', '#654', '#6e8']
+        }
+        // colorAxis: {colors: ['#000', '#fff']}
+      };
+
+      var chart = new google.visualization.GeoChart(document.getElementById('statisticsComplicationAndDeathsGeoChart'));
+
+      chart.draw(data, options);
+    };
+
+    function statisticsReturnsVsDeathsScatterChart() {
+      var jsonData = $.ajax({
+        url: "/statistics/returns_vs_deaths",
+        dataType: "json",
+        async: false
+      }).responseText;
+
+      var json = JSON.parse(jsonData);
+
+      var data = new google.visualization.DataTable();
+      data.addColumn('number', 'Returns');
+      data.addColumn('number', 'Deaths');
+
+      for (var i = 0; i < json.length; i++) {
+        row = json[i];
+        data.addRow([row["hospitalreturns"], row["deaths"]]);
+      }
+
+      var options = {
+        title: 'Returns vs. Deaths comparison',
+        hAxis: {
+          title: 'Returns',
+          minValue: 15,
+          maxValue: 18
+        },
+        vAxis: {
+          title: 'Deaths',
+          minValue: 5,
+          maxValue: 15
+        },
+        legend: 'none',
+        colors: ['#6316e0'],
+        pointShape: 'star',
+        pointSize: 9,
+        animation: {
+          duration: 200,
+          easing: 'inAndOut',
+        }
+      };
+
+      var chart = new google.visualization.ScatterChart(document.getElementById('statisticsReturnsVsDeathsScatterChart'));
+
+      chart.draw(data, options);
+    }
+
+    function statisticsCasesPieChart() {
+      var jsonData = $.ajax({
+        url: "/statistics/cases",
+        dataType: "json",
+        async: false
+      }).responseText;
+
+      var json = JSON.parse(jsonData);
+
+      // Create our data table out of JSON data loaded from server.
+      var data = new google.visualization.DataTable();
+      data.addColumn('string', 'Cases');
+      data.addColumn('number', 'Count');
+
+      for (var i = 0; i < json.length; i++) {
+        row = json[i];
+        data.addRow([row["cases"], row["count"]]);
+      }
+
+      // Instantiate and draw our chart, passing in some options.
+      var chart = new google.visualization.PieChart(document.getElementById('statisticsCasesPieChart'));
+      chart.draw(data, {
+        // title: 'Hospital Ownership',
+        is3D: true
+      });
+    }
+
+    function drawChart3() {
+      var jsonData = $.ajax({
+        url: "/data4",
+        dataType: "json",
+        async: false
+      }).responseText;
+
+      var json = JSON.parse(jsonData);
+
+      var data = new google.visualization.DataTable();
+      data.addColumn('string', 'State');
+      data.addColumn('number', 'care_transition');
+      data.addColumn('number', 'cleanliness');
+      // data.addColumn('number', 'communication_about_medicines');
+      // data.addColumn('number', 'discharge_information');
+      // data.addColumn('number', 'doctor_communication');
+      // data.addColumn('number', 'nurse_communication');
+      data.addColumn('number', 'overall_hospital_rating');
+
+
+      for (var i = 0; i < json.length; i++) {
+        row = json[i];
+        data.addRow([row["state"], row["care_transition"], row["cleanliness"], row["overall_hospital_rating"]]);
+      }
+
+      var options = {
+        title: 'Company Performance',
+        curveType: 'function',
+        legend: {
+          position: 'bottom'
+        }
+      };
+
+      var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+
+      chart.draw(data, options);
+    }
+
+    function surgeriesByStateColumnChart() {
+      var jsonData = $.ajax({
+        url: "/data2",
+        dataType: "json",
+        async: false
+      }).responseText;
+
+      var json = JSON.parse(jsonData);
+
+      var data = new google.visualization.DataTable();
+      data.addColumn('string', 'state');
+      data.addColumn('number', 'skin');
+      data.addColumn('number', 'eye');
+      data.addColumn('number', 'nervous_system');
+      data.addColumn('number', 'respiratory');
+
+      for (var i = 0; i < json.length; i++) {
+        row = json[i];
+        data.addRow([row["state"], row["skin"], row["eye"], row["nervous_system"], row["respiratory"]]);
+      }
+
+      var options = {
+        chart: {
+          title: 'Surgeries by State',
+          subtitle: 'Skin, Eye, Nervous, Repiratory',
+        }
+      };
+
+      var chart = new google.charts.Bar(document.getElementById('surgeriesByStateColumnChart'));
+
+      chart.draw(data, google.charts.Bar.convertOptions(options));
+    }
+  </script>
+</head>
+
+<body>
+  <nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+        <a class="navbar-brand" href="#">Databse Project</a>
+      </div>
+
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+        <ul class="nav navbar-nav">
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Hospitals<span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="#hospitalOwnership">Ownership</a></li>
+              <li><a href="#hospitalType">Type</a></li>
+              <li><a href="#hospitalStarRating">Star Rating</a></li>
+            </ul>
+          </li>
+
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Statistics<span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="#statisticsComplicationAndDeaths">Complications and Deaths</a></li>
+              <li><a href="#statisticsReturnsVsDeaths">Returns vs Deaths</a></li>
+              <li><a href="#statisticsCases">Cases</a></li>
+            </ul>
+          </li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Login<span class="caret"></span></a>
+            <ul id="login-dp" class="dropdown-menu">
+              <li>
+                <div class="row">
+                  <div class="col-md-12">
+                    <p align="center">Login</p>
+                    <form class="form" role="form" method="post" action="/login" accept-charset="UTF-8" id="login-nav">
+                      <div class="form-group">
+                        <label class="sr-only" for="email">Email address</label>
+                        <input type="email" class="form-control" id="email" name="email" placeholder="Email address" required>
+                      </div>
+                      <div class="form-group">
+                        <label class="sr-only" for="password">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+                      </div>
+                      <div class="form-group">
+                        <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </li>
+
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container-fluid -->
+  </nav>
+  <div class="container-fluid">
+    <div id="hospitals">
+      <div class="container-fluid adjust" id="hospitalOwnership">
+        <h2>Hospital Ownership</h2>
+        <div id="hospitalOwnershipPieChart" style="width: 75%; height: 500px;"></div>
+      </div>
+
+      <div class="container-fluid adjust" id="hospitalType">
+        <h2>Hospital Type</h2>
+        <div id="hospitalTypePieChart" style="width: 75%; height: 500px;"></div>
+      </div>
+
+      <div class="container-fluid adjust" id="hospitalStarRating">
+        <h2>Star Rating</h2>
+        <div id="hostpitalStarRatingColumnChart" style="width: 75%; height: 500px;"></div>
+      </div>
+
+      <!-- <div class="container-fluid adjust" id="surgeriesByState">
+        <h2>Surgeries By State</h2>
+        <div id="surgeriesByStateColumnChart" style="width: 75%; height: 500px;"></div>
+      </div> -->
+
+
+      <!-- <div id="surgeriesByState" style="width: 75%; height: 500px;"></div>
+      <div id="chart_div" style="width: 75%; height: 500px;"></div>
+      <div id="curve_chart" style="width: 75%; height: 500px"></div>
+      <div id="scatterChart" style="width: 75%; height: 500px"></div> -->
+    </div>
+
+    <div id="statistics">
+      <div class="container-fluid adjust" id="statisticsComplicationAndDeaths">
+        <h2>Complications and Deaths</h2>
+        <div id="statisticsComplicationAndDeathsGeoChart" style="width: 75%; height: 500px;"></div>
+      </div>
+
+      <div class="container-fluid adjust" id="statisticsReturnsVsDeaths">
+        <h2>Returns vs Deaths</h2>
+        <div id="statisticsReturnsVsDeathsScatterChart" style="width: 75%; height: 500px;"></div>
+      </div>
+
+      <div class="container-fluid adjust" id="statisticsCases">
+        <h2>Cases</h2>
+        <div id="statisticsCasesPieChart" style="width: 75%; height: 500px;"></div>
+      </div>
+      <!-- <div id="surgeriesByState" style="width: 75%; height: 500px;"></div>
+      <div id="chart_div" style="width: 75%; height: 500px;"></div>
+      <div id="curve_chart" style="width: 75%; height: 500px"></div>
+      <div id="scatterChart" style="width: 75%; height: 500px"></div> -->
+    </div>
+
+  </div>
+
+</body>
+
+</html>
