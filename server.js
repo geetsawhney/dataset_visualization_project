@@ -6,6 +6,7 @@ var bodyParser = require('body-parser');
 var fs = require('fs');
 var jsdom = require("jsdom");
 var createHTML = require('create-html');
+
 const {
   JSDOM
 } = jsdom;
@@ -13,6 +14,7 @@ const {
 const {
   document
 } = (new JSDOM('')).window;
+
 global.document = document;
 
 app.use("/styles", express.static(__dirname + "/styles"));
